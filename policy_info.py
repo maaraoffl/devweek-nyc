@@ -9,15 +9,14 @@ conn = pymysql.connect(host='34.211.233.152', port=3306, user='root', passwd='Ne
 cur = conn.cursor()
 cur.execute("SELECT * FROM owner")
 
-base_url = "https://v3v10.vitechinc.com/solr/participant/select?indent=on&q=*:*&wt=json"
+base_url = "https://v3v10.vitechinc.com/solr/policy_info/select?indent=on&q=*:*&wt=json"
 start = 0
-limit = 100
+limit = 1000
 
 index = 0
-count = 1
+count = 100
 
-table_name="participant"
-participant_base_sql="INSERT INTO participant(`zip`, `id`, `telephone`, `marital_status`, `state`, `last_name`, `email`, `date_added`, `first_name`, `city`, `dob`, `gender`, `middle_name`, `street_address`, `collection_id`, `_version_`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+table_name="policy_info"
 policy_info_base_sql="INSERT INTO policy_info (participant_id, insurance_product, insurance_coverage, insurance_premium, id, insurance_plan, policy_start_date, collection_id, _version_, promocodes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 #participant_base_sql="INSERT INTO participant (`id`, `last_name`, `email`) VALUES (%s, %s, %s)"
 
@@ -31,8 +30,13 @@ def convertDateTime(dateTimeString):
 
 def insert_data(policy_info):
     try:
+        promocodes=None
+        if "promocodes" in policy_info.keys():
+            promocodes = policy_info["promocodes"]
+
         cur.execute(policy_info_base_sql,
-            (policy_info["participant_id"],
+            (
+            policy_info["participant_id"],
             policy_info["insurance_product"],
             policy_info["insurance_coverage"],
             policy_info["insurance_premium"],
@@ -41,7 +45,8 @@ def insert_data(policy_info):
             convertDateTime(policy_info["policy_start_date"]),
             policy_info["collection_id"],
             str(policy_info["_version_"]),
-            policy_info["promocodes"],)
+            promocodes,
+            )
         )
 
         # cur.execute(participant_base_sql, (participant["zip"], participant["last_name"], participant["email"]))
